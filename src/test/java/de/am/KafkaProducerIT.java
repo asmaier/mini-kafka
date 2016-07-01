@@ -3,10 +3,8 @@ package de.am;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -15,7 +13,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.Test;
-import kafka.admin.TopicCommand;
+import kafka.admin.AdminUtils;
+import kafka.admin.RackAwareMode;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
 import kafka.utils.MockTime;
@@ -31,9 +30,8 @@ import static org.junit.Assert.*;
  * For online documentation
  * see
  * https://github.com/apache/kafka/blob/0.10.0/core/src/test/scala/unit/kafka/utils/TestUtils.scala
+ * https://github.com/apache/kafka/blob/0.10.0/core/src/main/scala/kafka/admin/AdminUtils.scala
  * https://github.com/apache/kafka/blob/0.10.0/core/src/main/scala/kafka/utils/ZkUtils.scala
- * https://github.com/apache/kafka/blob/0.10.0/core/src/main/scala/kafka/admin/TopicCommand.scala
- * https://github.com/apache/kafka/blob/0.10.0/core/src/test/scala/unit/kafka/admin/TopicCommandTest.scala
  * http://kafka.apache.org/0100/javadoc/index.html?org/apache/kafka/clients/producer/KafkaProducer.html
  * http://kafka.apache.org/0100/javadoc/index.html?org/apache/kafka/clients/consumer/KafkaConsumer.html
  * http://kafka.apache.org/0100/javadoc/org/apache/kafka/clients/consumer/ConsumerRecords.html
@@ -67,11 +65,7 @@ public class KafkaProducerIT {
         KafkaServer kafkaServer = TestUtils.createServer(config, mock);
 
         // create topic
-        String [] arguments = new String[]{"--topic", TOPIC, "--partitions", "1","--replication-factor", "1"};
-        TopicCommand.createTopic(zkUtils, new TopicCommand.TopicCommandOptions(arguments));
-        List<KafkaServer> servers = new ArrayList<>();
-        servers.add(kafkaServer);
-        TestUtils.waitUntilMetadataIsPropagated(scala.collection.JavaConversions.asScalaBuffer(servers), TOPIC, 0, 5000);
+        AdminUtils.createTopic(zkUtils, TOPIC, 1, 1, new Properties(), RackAwareMode.Disabled$.MODULE$);
 
         // setup producer
         Properties producerProps = new Properties();
@@ -97,7 +91,7 @@ public class KafkaProducerIT {
         producer.close();
 
         // starting consumer
-        ConsumerRecords<Integer, byte[]> records = consumer.poll(3000);
+        ConsumerRecords<Integer, byte[]> records = consumer.poll(1000);
         assertEquals(1, records.count());
         Iterator<ConsumerRecord<Integer, byte[]>> recordIterator = records.iterator();
         ConsumerRecord<Integer, byte[]> record = recordIterator.next();
