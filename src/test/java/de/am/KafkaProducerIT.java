@@ -91,7 +91,7 @@ public class KafkaProducerIT {
         producer.close();
 
         // starting consumer
-        ConsumerRecords<Integer, byte[]> records = consumer.poll(1000);
+        ConsumerRecords<Integer, byte[]> records = consumer.poll(3000);
         assertEquals(1, records.count());
         Iterator<ConsumerRecord<Integer, byte[]>> recordIterator = records.iterator();
         ConsumerRecord<Integer, byte[]> record = recordIterator.next();
