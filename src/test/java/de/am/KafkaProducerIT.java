@@ -19,7 +19,7 @@ import kafka.server.KafkaConfig;
 import kafka.server.KafkaServer;
 import kafka.utils.MockTime;
 import kafka.utils.TestUtils;
-import kafka.utils.Time;
+import org.apache.kafka.common.utils.Time;
 import kafka.utils.ZKStringSerializer$;
 import kafka.utils.ZkUtils;
 import kafka.zk.EmbeddedZookeeper;
@@ -60,6 +60,7 @@ public class KafkaProducerIT {
         brokerProps.setProperty("broker.id", "0");
         brokerProps.setProperty("log.dirs", Files.createTempDirectory("kafka-").toAbsolutePath().toString());
         brokerProps.setProperty("listeners", "PLAINTEXT://" + BROKERHOST +":" + BROKERPORT);
+        brokerProps.setProperty("offsets.topic.replication.factor" , "1");
         KafkaConfig config = new KafkaConfig(brokerProps);
         Time mock = new MockTime();
         KafkaServer kafkaServer = TestUtils.createServer(config, mock);
@@ -91,7 +92,7 @@ public class KafkaProducerIT {
         producer.close();
 
         // starting consumer
-        ConsumerRecords<Integer, byte[]> records = consumer.poll(3000);
+        ConsumerRecords<Integer, byte[]> records = consumer.poll(5000);
         assertEquals(1, records.count());
         Iterator<ConsumerRecord<Integer, byte[]>> recordIterator = records.iterator();
         ConsumerRecord<Integer, byte[]> record = recordIterator.next();
